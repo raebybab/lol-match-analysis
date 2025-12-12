@@ -44,6 +44,8 @@ Game lengths cluster between ~1700 and ~2200 seconds, forming a clear unimodal s
   2. First Blood Frequency
 The firstblood column shows an uneven distribution, with most games containing a first blood event early on.
 
+The plot below shows the distribution of match duration (in seconds) across all competitive 2022 League of Legends matches. Most games last between 1500 and 2200 seconds (25–36 minutes), forming a clear peak in the middle of the histogram. The long tail on the right shows that a smaller number of games extend much longer, while extremely short games are rare due to remakes being filtered out.
+
 <iframe
   src="assets/univariate_match_duration.html"
   width="800"
@@ -58,11 +60,15 @@ The firstblood column shows an uneven distribution, with most games containing a
   frameborder="0">
 </iframe>
 
+
+
 - Bivariate Analysis
   1. Win/Loss Conditional on First Blood
 Teams that secured first blood had visibly higher counts of wins compared to losses.
   2. Gold Difference at 25 vs Match Duration
 A strong negative trend: large early gold leads correlate with shorter matches, showing that early dominance closes games faster.
+
+The plot below shows the relationship between **first blood** and **match outcome**. Teams that secure first blood win more often than they lose, while teams that do not secure first blood tend to lose more frequently. The difference is noticeable but not overwhelming, suggesting that first blood provides an early advantage but does not guarantee victory.
 
 <iframe
   src="assets/bivariate_loss_dstr_first_blood.html"
@@ -76,89 +82,275 @@ A strong negative trend: large early gold leads correlate with shorter matches, 
 Results mostly centered around 0.5, which is expected because each match contributes one win and one loss to the dataset.
 The purpose of this aggregation was to confirm no systemic imbalance in recorded match outcomes.
 
-- (Embed images below)
+	```
+				 league  result
+	0              ASCI     0.5
+	41              PCS     0.5
+	30              LJL     0.5
+	31             LJLA     0.5
+	32              LLA     0.5
+	33              LMF     0.5
+	34              LPL     0.5
+	35            LPLOL     0.5
+	36           LVP SL     0.5
+	37              MSI     0.5
+	38             NEXO     0.5
+	39              NLC     0.5
+	40  NLC Aurora Open     0.5
+	42              PGC     0.5
+	28             LFL2     0.5
+	43              PGN     0.5
+	44              PRM     0.5
+	45             PRMP     0.5
+	46       SL (LATAM)     0.5
+	47              TAL     0.5
+	48              TCL     0.5
+	49               UL     0.5
+	50              UPL     0.5
+	51              USP     0.5
+	52              VCS     0.5
+	53               VL     0.5
+	29              LHE     0.5
+	27              LFL     0.5
+	1             CBLOL     0.5
+	13              GLL     0.5
+	2            CBLOLA     0.5
+	3               CDF     0.5
+	4                CT     0.5
+	5              DCup     0.5
+	6               DDH     0.5
+	7               EBL     0.5
+	8             EBLPA     0.5
+	9                EL     0.5
+	10            ESLOL     0.5
+	11              EUM     0.5
+	12               GL     0.5
+	14            GLLPA     0.5
+	26              LEC     0.5
+	15               HC     0.5
+	16               HM     0.5
+	17               IC     0.5
+	18              LAS     0.5
+	19              LCK     0.5
+	20             LCKC     0.5
+	21              LCL     0.5
+	22              LCO     0.5
+	23              LCS     0.5
+	24             LCSA     0.5
+	25              LDL     0.5
+	54             WLDs     0.5
+	```
 
 ## Assessment of Missingness
+### NMAR Analysis
+One column in this dataset with meaningful missingness is golddiffat25, which records the gold difference between the two teams at the 25-minute mark. If this value is missing, the most likely explanation is that the match did not last long enough for a 25-minute timestamp to exist. This is external information about game duration, not the gold difference itself, so the missingness is likely MAR, not NMAR.
 
-## Hypothesis Testing (Step 4)
-- Hypothesis test 1 summary + conclusion First Blood and Win Rate
-  - 	Null Hypothesis: Teams with and without first blood have identical win rates.
-	•	Alternative Hypothesis: Teams with first blood have a higher win rate.
-	•	Test Statistic: Difference in mean win rate.
-	•	Result: p-value ≈ 0. The null hypothesis is rejected.
-Conclusion: Obtaining first blood is strongly associated with a higher probability of winning.
-- Hypothesis test 2 summary + conclusion Gold Lead at 25 min and Game Length
-  - Null Hypothesis: Early gold difference is unrelated to match duration.
-	•	Alternative Hypothesis: Larger gold leads at 25 minutes reduce match duration.
-	•	Test Statistic: Correlation between golddiffat25 and gamelength.
-	•	Result: p-value ≈ 0. The null hypothesis is rejected.
-Conclusion: Early economic advantage is a strong predictor of shorter matches.
+To conclude a variable is NMAR, the probability of missingness must depend on the unobserved value itself (e.g., extremely high gold leads to being hidden). There is no reason to believe teams strategically hide gold difference values based on large or small magnitudes. Instead, we would need additional match-timeline data to confirm whether short games explain all missing values.
 
-## Framing a Prediction Problem
-- Target variable:  result (0 = loss, 1 = win).
-- Prediction Type: Binary classification.
-	•	Justification: All features used are available early in the match, so no data leakage occurs.
-	•	Evaluation Metric: Accuracy, chosen for interpretability and because classes are not extremely imbalanced.
+Therefore, I do not believe any column in this analysis is NMAR.
 
-## Baseline Model (Step 6)
-- Model: Logistic Regression inside a single sklearn Pipeline.
-	•	Features Used:
-firstblood, firsttower, firstdragon, firstherald, golddiffat25
-	•	Transformations: StandardScaler applied to numeric features.
-	•	Performance:
-Train accuracy ≈ 0.835
-Test accuracy ≈ 0.830
+### Missingness Dependency Analysis
+I investigated whether the missingness of golddiffat25 depends on other variables in the dataset.
 
-Interpretation: The logistic model provides a strong linear baseline, capturing early objective control and gold lead information.
+Test 1: Does missingness of golddiffat25 depend on game duration?
+	•	Column X (missingness column): golddiffat25
+	•	Column Y (tested dependency): gamelength
+	•	Test statistic: Difference in mean gamelength between non-missing and missing groups
+	•	Observed statistic: 218.95 seconds
+	•	p-value: 0.0
+	•	Conclusion: We reject the null.
+Missingness of golddiffat25 does depend on gamelength.
+Games that are missing golddiffat25 are significantly shorter, consistent with the idea that short games never reached 25 minutes.
 
-## Final Model (Step 7)
--	Model Type: Random Forest Classifier.
-	•	New Engineered Features:
-	•	Scaled/normalized gold advantage
-	•	Combined objective indicators
-	•	Hyperparameters Tuned (GridSearchCV):
-	•	n_estimators
-	•	max_depth
-	•	min_samples_split
-	•	Best Parameters:
-{n_estimators: 200, max_depth: 10, min_samples_split: 5}
-	•	Performance:
-Train accuracy ≈ 0.862
-Test accuracy ≈ 0.858
+Test 2: Does missingness of golddiffat25 depend on match result?
+	•	Column X: golddiffat25
+	•	Column Y: result
+	•	Test statistic: Difference in mean win rate between non-missing and missing groups
+	•	Observed statistic: 0.0
+	•	p-value: 0.522
+	•	Conclusion: We fail to reject the null.
+Missingness of golddiffat25 does NOT depend on whether a team won or lost.
+This means both winning and losing teams are equally likely to have missing values, implying no bias between results and missing gold data.
 
-Conclusion: The Random Forest model improves generalization by capturing nonlinear interactions that Logistic Regression cannot represent.
+<iframe
+  src="assets/missingness_gamelength.html"
+  width="800"
+  height="600"
+  frameborder="0">
+</iframe>
 
-Fairness Question
+## Hypothesis Testing
+**Hypothesis Test 1**: Does getting First Blood increase a team’s chance of winning?
 
-Does the model perform differently for blue side teams compared to red side teams?
+Null Hypothesis (H₀):
+Teams that get First Blood and teams that do not get First Blood have the same average win rate. Any observed difference is due to random chance.
 
-Groups
-	•	Group X: Blue side
-	•	Group Y: Red side
+Alternative Hypothesis (H₁):
+Teams that get First Blood have a higher average win rate than teams that do not.
 
-Metric: Precision
+Test Statistic:
+Difference in mean win rate between:
+• teams with firstblood = 1
+• teams with firstblood = 0
 
-Null Hypothesis:
+Significance Level:
+α = 0.05
 
-The model is fair; precision for blue and red teams is the same.
+Observed Statistic:
+0.2198 — teams with First Blood win about 22 percentage points more often.
 
-Alternative Hypothesis:
-
-The model is unfair; precision for blue differs from precision for red.
-
-Result
-	•	Observed precision difference: ~–0.88
-	•	Permutation test p-value: 1.0
-	•	The observed difference lies entirely within the null distribution.
+p-value:
+0.0
 
 Conclusion:
-There is no evidence the model systematically favors either group.
-All differences are consistent with random variation.
-- Embed fairness histogram
+Since the p-value is effectively 0, we reject the null hypothesis. There is strong statistical evidence that teams securing First Blood tend to win more often, though this does not prove causation.
 
-![Fairness Plot](images/fairness.png)
+
+
+**Hypothesis Test 2**: Is gold difference at 25 minutes correlated with total game length?
+
+Null Hypothesis (H₀):
+There is no correlation between golddiffat25 and gamelength. Any observed correlation is due to chance.
+
+Alternative Hypothesis (H₁):
+There is a correlation between golddiffat25 and gamelength.
+
+Test Statistic:
+Pearson correlation between the two columns.
+
+Observed Statistic:
+2.06 × 10⁻¹⁹ (essentially 0 — almost no linear relationship).
+
+p-value:
+0.0
+
+Conclusion:
+Even though the observed correlation is extremely close to zero, the permutation distribution is even smaller, so we still reject the null because the test statistic is significantly different from the shuffled distribution. This tells us that the observed (near-zero) correlation is statistically different from random noise—however, practically speaking, the correlation is negligible. Gold difference at 25 minutes does not predict how long a match lasts in a meaningful way.
+
+## Framing a Prediction Problem
+Prediction Problem
+
+The goal of my prediction task is to predict whether a team wins a match, using only information that would be available by the 25-minute mark of the game. This is a binary classification problem, since the response variable result takes values 1 (win) or 0 (loss).
+
+Response Variable
+- result (0 = loss, 1 = win)
+
+This variable directly reflects match outcome, making it the most natural choice for a prediction problem in competitive games.
+
+Features Used at Prediction Time
+
+All features come from events that occur before or by minute 25, meaning they are valid for prediction:
+- firstblood – whether the team secured the first kill
+- firsttower – whether the team destroyed the first tower
+- firstdragon – whether the team secured the first dragon
+- firstherald – whether the team secured the first Rift Herald
+- golddiffat25 – gold lead or deficit at minute 25
+
+These features capture early objective control and economic advantage, both widely known to influence match outcomes.
+
+Evaluation Metric
+
+I use accuracy as my evaluation metric.
+
+Why accuracy?
+- The dataset is roughly balanced in terms of wins and losses. 
+- The goal is to correctly classify outcomes, not specifically optimize for minority-class performance.
+- Accuracy is easy to interpret and appropriate for a first baseline model.
+
+## Baseline Model
+For our baseline model, we built a binary classification model that predicts whether a team wins (result = 1) or loses (result = 0) using only early-game objective information. The features used were:
+* 	firstblood – binary
+* 	firsttower – binary
+* 	firstdragon – binary
+* 	firstherald – binary
+* 	golddiffat25 – quantitative
+
+All five features are measurable before the match ends, so they are valid at “time of prediction.” The four objective-related columns are nominal binary variables, while golddiffat25 is a quantitative numeric feature.
+
+### Encoding & Preprocessing
+
+Since all predictors are numeric (0/1 or real-valued), the only transformation required was scaling. We used an sklearn ColumnTransformer with StandardScaler applied to all features.
+
+The entire workflow—including preprocessing and model training—was implemented in a single Pipeline, as required.
+
+### Model Choice
+
+We used Logistic Regression as the baseline classifier because:
+* 	it is simple and interpretable
+* 	it is commonly used as a baseline for binary problems
+
+### Performance
+
+Using an 80/20 train–test split:
+* 	Accuracy: 0.835
+* 	F1 Score: 0.830
+
+### Interpretation
+
+The baseline model performs reasonably well: early objectives and gold leads contain strong predictive power. However, we believe the model can be improved by:
+* 	adding additional engineered features
+* 	using a more flexible model (e.g., Random Forest)
+* 	tuning hyperparameters to better capture non-linear relationships
+
+The logistic model provides a strong linear baseline, capturing early objective control and gold lead information.
+
+## Final Model
+For the final model, I aimed to improve upon the logistic-regression baseline by allowing the model to capture non-linear relationships in the game features. To do this, I added a QuantileTransformer to reshape all numeric variables (firstblood, firsttower, firstdragon, firstherald, golddiffat25) into a normal-like distribution. This transformation helps tree-based models separate values more effectively, especially when the raw game statistics are extremely skewed (for example, gold differences at 25 minutes have a long right tail).
+Because competitive League of Legends outcomes are influenced by complex, non-linear interactions between objectives, a tree-based model is a more appropriate choice than a linear model.
+
+I used a Random Forest classifier for the final model. To choose the best version of this model, I performed a hyperparameter search using GridSearchCV. I tuned:
+* 	number of trees (n_estimators)
+* 	maximum tree depth (max_depth)
+* 	minimum samples required to split (min_samples_split)
+
+GridSearchCV evaluated multiple combinations of these values and selected the model that generalized best across folds.
+
+The best hyperparameters were:
+```commandline
+{'clf__max_depth': 10,
+ 'clf__min_samples_split': 5,
+ 'clf__n_estimators': 100}
+```
+The final model achieved:
+	•	Accuracy: 0.858
+	•	F1-score: 0.854
+
+This represents a clear improvement over the baseline logistic regression model (Accuracy ≈ 0.835, F1 ≈ 0.830). The improvement is expected because Random Forests capture non-linear interactions between objectives, which better reflects how League of Legends matches actually unfold (e.g., securing first dragon matters more when combined with an early tower, gold leads interact with objective control, etc.).
+
+Overall, the final model performs better because it aligns more closely with the underlying data-generating process of competitive games: outcomes are decided by combinations of game events rather than simple linear effects.
+
 
 ## Fairness Analysis
+In this section, I examined whether my final Random Forest model treats blue-side teams and red-side teams differently. Since the model predicts match outcomes, I focused on precision, which measures how often a positive prediction (win) is correct.
 
-GitHub Repo
-Link to the code repository (private).
+Groups Compared
+* 	Group X: Blue-side teams
+* 	Group Y: Red-side teams
+
+Evaluation Metric 
+- Precision
+
+I chose precision because false positives are especially important in game prediction: incorrectly predicting a team will win can be more misleading than incorrectly predicting a loss.
+
+Null and Alternative Hypotheses
+* 	Null Hypothesis (H₀): The model is fair. The precision for blue-side teams and red-side teams is roughly equal, and any observed difference is due to random chance. 
+* Alternative Hypothesis (H₁): The model is unfair. The precision for blue-side teams is lower than the precision for red-side teams.
+
+Test Statistic
+* 	The difference in precision: precision_blue − precision_red
+
+A negative value suggests the model is worse for blue-side teams.
+
+Results
+* 	Observed precision difference: −0.8865
+* 	p-value: 1.0
+
+Interpretation
+
+Although the observed precision difference is large and negative, the p-value of 1.0 means differences this extreme (or more extreme) appear very frequently under random permutations of the group labels. Therefore, we fail to reject the null hypothesis at any reasonable significance level.
+
+Conclusion
+
+Based on this permutation test, I do not have evidence that the model systematically treats blue-side and red-side teams differently. The apparent precision gap is not statistically meaningful once randomness is accounted for.
+
+In other words, I cannot conclude that the model is unfair toward either side.
