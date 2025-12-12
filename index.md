@@ -43,18 +43,6 @@ These columns capture the main strategic objectives and economic state of a team
 Game lengths cluster between ~1700 and ~2200 seconds, forming a clear unimodal shape.
   2. First Blood Frequency
 The firstblood column shows an uneven distribution, with most games containing a first blood event early on.
-- Bivariate Analysis
-  1. Win/Loss Conditional on First Blood
-Teams that secured first blood had visibly higher counts of wins compared to losses.
-  2. Gold Difference at 25 vs Match Duration
-A strong negative trend: large early gold leads correlate with shorter matches, showing that early dominance closes games faster.
-
-- Interesting Aggregate
-  - Win rate by league was computed by grouping matches by the tournament league.
-Results mostly centered around 0.5, which is expected because each match contributes one win and one loss to the dataset.
-The purpose of this aggregation was to confirm no systemic imbalance in recorded match outcomes.
-
-- (Embed images below)
 
 <iframe
   src="assets/univariate_match_duration.html"
@@ -70,8 +58,25 @@ The purpose of this aggregation was to confirm no systemic imbalance in recorded
   frameborder="0">
 </iframe>
 
-![Plot 1](images/plot1.png)
-![Plot 2](images/plot2.png)
+- Bivariate Analysis
+  1. Win/Loss Conditional on First Blood
+Teams that secured first blood had visibly higher counts of wins compared to losses.
+  2. Gold Difference at 25 vs Match Duration
+A strong negative trend: large early gold leads correlate with shorter matches, showing that early dominance closes games faster.
+
+<iframe
+  src="assets/bivariate_loss_dstr_first_blood.html"
+  width="800"
+  height="600"
+  frameborder="0">
+</iframe>
+
+- Interesting Aggregate
+  - Win rate by league was computed by grouping matches by the tournament league.
+Results mostly centered around 0.5, which is expected because each match contributes one win and one loss to the dataset.
+The purpose of this aggregation was to confirm no systemic imbalance in recorded match outcomes.
+
+- (Embed images below)
 
 ## Assessment of Missingness
 
