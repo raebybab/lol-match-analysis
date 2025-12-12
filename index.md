@@ -63,6 +63,13 @@ The purpose of this aggregation was to confirm no systemic imbalance in recorded
   frameborder="0">
 </iframe>
 
+<iframe
+  src="assets/univariate_freq_first_blood.html"
+  width="800"
+  height="600"
+  frameborder="0">
+</iframe>
+
 ![Plot 1](images/plot1.png)
 ![Plot 2](images/plot2.png)
 
