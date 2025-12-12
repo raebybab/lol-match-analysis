@@ -57,7 +57,7 @@ The purpose of this aggregation was to confirm no systemic imbalance in recorded
 - (Embed images below)
 
 <iframe
-  src="univariate_match_duration.html"
+  src="assets/univariate_match_duration.html"
   width="800"
   height="600"
   frameborder="0">
