@@ -351,6 +351,4 @@ Although the observed precision difference is large and negative, the p-value of
 
 Conclusion
 
-Based on this permutation test, I do not have evidence that the model systematically treats blue-side and red-side teams differently. The apparent precision gap is not statistically meaningful once randomness is accounted for.
-
-In other words, I cannot conclude that the model is unfair toward either side.
+The permutation test shows a p-value of 1.0, meaning that the observed precision difference between blue-side and red-side teams is completely consistent with random variation. I do not have statistical evidence that the model systematically favors or disadvantages either group. Therefore, I cannot conclude that the model is unfair toward blue-side or red-side teams.
